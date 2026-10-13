@@ -281,3 +281,20 @@ For each problem, record the problem number and title, the prompt I gave, a foll
      - **Money coming in:** a Sales & Billing agent with orders, invoices, payments received and refunds, plus a Planning agent with a cash and demand forecast. Needs a change to rule 7.
      - **Talking to the outside world safely:** a Communications agent with `send_approved_message`, `ingest_inbox`, `track_shipment` and `verify_payee_change`.
   - **Checked in the browser:** all 5 sections render, the tab label reads "how it went", there's no sideways scrolling, and the HTML is well-formed.
+
+### Problem 11: Submit to GitHub
+
+- **Prompt:** "Problem 11- Submit to Github. Let's organze homework 5 this way" (with the `hw5/` folder tree: `AI_prompts.md`, `requirements.txt`, `.env.example`, `.gitignore`, `.mcp.json`, `README.md`, `data/` (2 databases), `mcp_server/` (`server.py`, `README.md`), `frontend/`, `backend/` (`main.py`, `models.py`, `prompts/` with the 5 agent prompts), `output/` (harness, mcp_smoke, desk_tickets, design, resolved_tickets, resolved_board, audit_trail, github_url.txt))
+- **Follow-up prompts:**
+  - "Let's push our code to public Github repository so that the graders can clone it"
+  - "let's also add this in output/github_url.txt"
+- **Result / evidence:**
+  - **Reorganized to the tree:**
+    - `mcp.json` became **`.mcp.json`** with paths relative to `hw5/`. The backend and smoke test resolve them, so the repo works wherever it's cloned.
+    - The offline tests moved to `backend/tests/` and the report builder to `backend/build_run_report.py`, so the top level matches exactly.
+    - The extra end-state database copy was taken out of `data/`.
+    - New **`.env.example`** (Portkey key placeholder), **`.gitignore`** (`.env`, `.venv`, `node_modules`, builds, OS files) and **`README.md`** (overview, folder tree, setup and run, tests, shop rules, run results).
+    - The harness and MCP README updated to the new paths.
+  - **Checked after the move:** connectivity (17 tools), MCP tools 49/49, offline team 24/24, API 22/22, frontend type-check. The working database was untouched (still the $160 end state).
+  - **Secret scan:** the real Portkey key is in no tracked file (it stays in the workspace `.env`). The only email in the code is a test's fake address.
+  - **Git:** repo on branch `main`, author Anjali. Pushed to the public repo **https://github.com/art72-dev/hw5**, and the URL is saved in `output/github_url.txt`.
