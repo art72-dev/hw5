@@ -1,0 +1,26 @@
+# Secrets
+.env
+
+# SQLite side files (the two .db files in data/ ARE committed)
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+
+# Environments, dependencies and builds
+.venv/
+venv/
+node_modules/
+dist/
+__pycache__/
+*.pyc
+*.tsbuildinfo
+*.tmp
+output/*.json.tmp
+
+# OS / editor files
+.DS_Store
+.vscode/
+.idea/
+
+# The dashboard config holds only the API address (no secrets), so it ships
+!frontend/.env

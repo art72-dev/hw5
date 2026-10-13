@@ -1,0 +1,316 @@
+{
+  "test": "campus-customs MCP smoke test",
+  "run_at": "2026-10-10T23:32:46-04:00",
+  "server": {
+    "name": "campus-customs",
+    "config_file": "mcp.json",
+    "transport": "stdio",
+    "called_via": "FastMCP stdio client launched from the mcp.json entry (the same command Claude Code runs)",
+    "command": "/Users/anjali/Desktop/AI Foundations/Homework 5/.venv/bin/python",
+    "args": [
+      "/Users/anjali/Desktop/AI Foundations/Homework 5/mcp_server/server.py"
+    ]
+  },
+  "database": "data/campus_customs_new.db",
+  "tools_listed": [
+    "check_margin",
+    "check_rent_due",
+    "check_stock",
+    "check_vendor_status",
+    "decide_request",
+    "draft_customer_message",
+    "draft_vendor_order",
+    "get_board",
+    "get_cash_position",
+    "get_ticket",
+    "list_open_tickets",
+    "list_tickets",
+    "pay_approved_request",
+    "refresh_working_copy",
+    "request_payment",
+    "request_price_override",
+    "update_ticket"
+  ],
+  "results": [
+    {
+      "ticket": 101,
+      "prompt": "Ticket 101: Tauhid Zaman needs 1 Classic Bulldog Tee (CC-TEE-WHITE) in size S. Do we have one in stock, and what does it cost us and sell for?",
+      "tool": "check_stock",
+      "arguments": {
+        "sku": "CC-TEE-WHITE",
+        "size": "S",
+        "qty_needed": 1
+      },
+      "output": {
+        "sku": "CC-TEE-WHITE",
+        "name": "Classic Bulldog Tee",
+        "size": "S",
+        "location": "Aisle B",
+        "on_hand": 0,
+        "qty_needed": 1,
+        "short_by": 1,
+        "can_fill_from_stock": false,
+        "other_sizes_in_stock": {
+          "M": 5,
+          "L": 3,
+          "XL": 2
+        },
+        "pricing": {
+          "unit_cost": 8.0,
+          "list_price": 28.0,
+          "margin_per_unit": 20.0,
+          "quote_at_list": 28.0,
+          "cost_floor": 8.0,
+          "note": "Quote only. Cash only goes out; a sale never adds to cash_accounts."
+        }
+      },
+      "db_check": {
+        "sql": "SELECT i.name, i.qty AS on_hand, i.location, p.unit_cost, p.list_price, MAX(0, 1 - i.qty) AS short_by FROM inventory i JOIN pricing p ON p.sku = i.sku WHERE i.sku = 'CC-TEE-WHITE' AND i.size = 'S'",
+        "row": {
+          "name": "Classic Bulldog Tee",
+          "on_hand": 0,
+          "location": "Aisle B",
+          "unit_cost": 8.0,
+          "list_price": 28.0,
+          "short_by": 1
+        }
+      },
+      "compared": [
+        {
+          "field": "name",
+          "tool": "Classic Bulldog Tee",
+          "db": "Classic Bulldog Tee",
+          "match": true
+        },
+        {
+          "field": "on_hand",
+          "tool": 0,
+          "db": 0,
+          "match": true
+        },
+        {
+          "field": "location",
+          "tool": "Aisle B",
+          "db": "Aisle B",
+          "match": true
+        },
+        {
+          "field": "unit_cost",
+          "tool": 8.0,
+          "db": 8.0,
+          "match": true
+        },
+        {
+          "field": "list_price",
+          "tool": 28.0,
+          "db": 28.0,
+          "match": true
+        },
+        {
+          "field": "short_by",
+          "tool": 1,
+          "db": 1,
+          "match": true
+        }
+      ],
+      "match": true
+    },
+    {
+      "ticket": 101,
+      "prompt": "Ticket 101 is linked to invoice 501. Can Bulldog Print Co (vendor 1) ship the tee reprint, how overdue is the bill, and could checking cover it?",
+      "tool": "check_vendor_status",
+      "arguments": {
+        "vendor_id": 1
+      },
+      "output": {
+        "today": "2026-08-31",
+        "vendors": [
+          {
+            "vendor_id": 1,
+            "name": "Bulldog Print Co",
+            "specialty": "apparel reprint",
+            "lead_days": 5,
+            "can_ship": false,
+            "blocked_reason": "1 open invoice(s) totalling $840.00 must be paid (with human approval) before this vendor ships",
+            "open_invoices": [
+              {
+                "invoice_id": 501,
+                "amount": 840.0,
+                "due_date": "2026-08-28",
+                "overdue": true,
+                "days_overdue": 3,
+                "description": "Rush reprint CC-TEE-WHITE S",
+                "cash_check": [
+                  {
+                    "account": "checking",
+                    "balance": 3400.0,
+                    "covers": true,
+                    "balance_after": 2560.0
+                  }
+                ]
+              }
+            ],
+            "open_balance": 840.0,
+            "arrives_by_if_ordered_today": null
+          }
+        ]
+      },
+      "db_check": {
+        "sql": "SELECT v.name, v.lead_days, inv.id AS invoice_id, inv.amount, inv.due_date, CAST(julianday(d.date_today) - julianday(inv.due_date) AS INTEGER) AS days_overdue, (SELECT COUNT(*) FROM invoices WHERE vendor_id = v.id AND status = 'open') = 0 AS can_ship, c.balance - inv.amount AS balance_after FROM vendors v JOIN invoices inv ON inv.vendor_id = v.id AND inv.status = 'open' CROSS JOIN desk d CROSS JOIN cash_accounts c WHERE v.id = 1 AND c.name = 'checking'",
+        "row": {
+          "name": "Bulldog Print Co",
+          "lead_days": 5,
+          "invoice_id": 501,
+          "amount": 840.0,
+          "due_date": "2026-08-28",
+          "days_overdue": 3,
+          "can_ship": 0,
+          "balance_after": 2560.0
+        }
+      },
+      "compared": [
+        {
+          "field": "name",
+          "tool": "Bulldog Print Co",
+          "db": "Bulldog Print Co",
+          "match": true
+        },
+        {
+          "field": "lead_days",
+          "tool": 5,
+          "db": 5,
+          "match": true
+        },
+        {
+          "field": "invoice_id",
+          "tool": 501,
+          "db": 501,
+          "match": true
+        },
+        {
+          "field": "amount",
+          "tool": 840.0,
+          "db": 840.0,
+          "match": true
+        },
+        {
+          "field": "due_date",
+          "tool": "2026-08-28",
+          "db": "2026-08-28",
+          "match": true
+        },
+        {
+          "field": "days_overdue",
+          "tool": 3,
+          "db": 3,
+          "match": true
+        },
+        {
+          "field": "can_ship",
+          "tool": 0,
+          "db": 0,
+          "match": true
+        },
+        {
+          "field": "balance_after",
+          "tool": 2560.0,
+          "db": 2560.0,
+          "match": true
+        }
+      ],
+      "match": true
+    },
+    {
+      "ticket": 102,
+      "prompt": "Ticket 102: Elm City Properties emailed that the Chapel Street shop rent is due in 2 days. Is that right by the desk date, is it overdue, and can we cover it?",
+      "tool": "check_rent_due",
+      "arguments": {
+        "lease_id": 1
+      },
+      "output": {
+        "today": "2026-08-31",
+        "lease_id": 1,
+        "space_name": "Chapel Street shop",
+        "landlord": "Elm City Properties",
+        "monthly_rent": 2400.0,
+        "next_due": "2026-09-02",
+        "days_until_due": 2,
+        "overdue": false,
+        "status": "due in 2 day(s)",
+        "notes": null,
+        "cash_check": [
+          {
+            "account": "checking",
+            "balance": 3400.0,
+            "covers": true,
+            "balance_after": 1000.0
+          }
+        ]
+      },
+      "db_check": {
+        "sql": "SELECT l.space_name, l.landlord, l.monthly_rent, l.next_due, CAST(julianday(l.next_due) - julianday(d.date_today) AS INTEGER) AS days_until_due, l.next_due < d.date_today AS overdue, c.balance - l.monthly_rent AS balance_after FROM leases l CROSS JOIN desk d CROSS JOIN cash_accounts c WHERE l.id = 1 AND c.name = 'checking'",
+        "row": {
+          "space_name": "Chapel Street shop",
+          "landlord": "Elm City Properties",
+          "monthly_rent": 2400.0,
+          "next_due": "2026-09-02",
+          "days_until_due": 2,
+          "overdue": 0,
+          "balance_after": 1000.0
+        }
+      },
+      "compared": [
+        {
+          "field": "space_name",
+          "tool": "Chapel Street shop",
+          "db": "Chapel Street shop",
+          "match": true
+        },
+        {
+          "field": "landlord",
+          "tool": "Elm City Properties",
+          "db": "Elm City Properties",
+          "match": true
+        },
+        {
+          "field": "monthly_rent",
+          "tool": 2400.0,
+          "db": 2400.0,
+          "match": true
+        },
+        {
+          "field": "next_due",
+          "tool": "2026-09-02",
+          "db": "2026-09-02",
+          "match": true
+        },
+        {
+          "field": "days_until_due",
+          "tool": 2,
+          "db": 2,
+          "match": true
+        },
+        {
+          "field": "overdue",
+          "tool": 0,
+          "db": 0,
+          "match": true
+        },
+        {
+          "field": "balance_after",
+          "tool": 1000.0,
+          "db": 1000.0,
+          "match": true
+        }
+      ],
+      "match": true
+    }
+  ],
+  "db_unchanged": true,
+  "db_sha256": "23686a90d698f7fa6f901a3f0a9774db9cbb31e13151c9e5717275f3321f360a",
+  "summary": {
+    "tools_tested": 3,
+    "passed": 3,
+    "failed": 0
+  }
+}
