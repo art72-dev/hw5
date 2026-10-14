@@ -21,7 +21,7 @@ hw5/
 ├── README.md
 ├── data/
 │   ├── campus_customs.db    # the original: never written
-│   └── campus_customs_new.db  # the working copy the system uses (now in its post-run state: $160)
+│   └── campus_customs_new.db  # the working copy the system uses (shipped in its post-run state: $160)
 ├── mcp_server/
 │   ├── server.py            # the 17 tools
 │   ├── smoke_test.py        # Problem 4 smoke test -> output/mcp_smoke.json
@@ -49,46 +49,79 @@ hw5/
 
 ## How to run
 
-You need Python 3.10+, Node 20.19+ and a Portkey key.
+You need Python 3.10+, Node 20.19+ and a Portkey key. Run every command from the `hw5/` folder unless a step says otherwise.
 
-**1. Setup**
+### 0. One-time setup
 
 ```bash
-cp .env.example .env          # then put your PORTKEY_API_KEY in .env
+cp .env.example .env          # then put your PORTKEY_API_KEY in .env (never commit .env)
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 cd frontend && npm install && cd ..
 ```
 
-**2. Backend API** (terminal 1)
+### 1. Copy the original database to the working copy (whenever you need a clean run)
+
+`data/campus_customs.db` is the **original**, and nothing ever writes to it. `data/campus_customs_new.db` is the **working copy**: the MCP server, the backend and the agents all read and write it.
+
+The repo ships the working copy in its **post-run state** (after Problem 9: checking $160, two payments, all tickets resolved), so it matches the files in `output/`. To start clean, copy the original over it:
+
+```bash
+cp data/campus_customs.db data/campus_customs_new.db
+```
+
+After the copy you have the starting data: checking $3,400, 3 open tickets, an empty `payments` table, and invoice #501 open.
+
+### 2. Start the MCP server
+
+The MCP server (`mcp_server/server.py`, FastMCP) runs over **stdio**, so whatever uses it launches it with the command in `.mcp.json`.
+
+- **For the app, you don't start it by hand.** The FastAPI backend (step 3) starts its own MCP server process on startup, and every agent run starts one too. No extra terminal is needed.
+- **To start it by itself and confirm it works:**
+
+  ```bash
+  .venv/bin/python backend/team.py --check    # starts the MCP server, lists its 17 tools and each agent's tools, no model calls
+  .venv/bin/python mcp_server/server.py       # or run it raw: it waits for an MCP client on stdio (Ctrl+C to stop)
+  ```
+
+- **In Claude Code:** open `hw5/` as the project and approve `campus-customs` when asked. `.mcp.json` registers it, and the tools appear as `mcp__campus-customs__<tool>`.
+
+### 3. Start the FastAPI backend (terminal 1)
 
 ```bash
 cd backend
 ../.venv/bin/uvicorn main:app --reload --port 8000
 ```
 
-API docs are at http://localhost:8000/docs.
+The API is at http://localhost:8000, with docs at http://localhost:8000/docs. On startup it connects to the MCP server and rebuilds past run history from `output/audit_trail.json`.
 
-**3. Dashboard** (terminal 2)
+### 4. Start the React board (terminal 2)
 
 ```bash
 cd frontend
 npm run dev
 ```
 
-Open **http://localhost:5173**, then:
-1. Click **Reset data** to start from the original data.
-2. Pick a ticket and click **Start the team**.
-3. Type your name under **Waiting on you** and approve. The checking balance drops after a payment is approved.
+Open **http://localhost:5173**. The board talks to the backend at `http://localhost:8000` (the backend allows this origin through CORS).
 
-**Other ways to run it**
+### 5. Reset the database before a full three-ticket run
 
-```bash
-.venv/bin/python backend/team.py --check   # connectivity: tools and each agent's slice, no model calls
-.venv/bin/python backend/team.py           # the CLI run: refresh -> triage -> all tickets
-```
+Always start a full run from the original data (rule 8). With the backend running, pick one of these. They all copy the original over the working copy:
 
-Each ticket run makes real `gpt-6-luna` calls, about 30k–65k tokens per ticket.
+- On the board, click **Reset data** (top right).
+- `curl -X POST http://localhost:8000/api/reset`
+- Step 1's `cp` command.
+
+Then run the three tickets **one at a time, in order**:
+1. Pick **ticket 101**, then **Start the team**. Watch each agent in the live feed until the ticket is stamped **Resolved**.
+2. Under **Waiting on you**, type your name in *Approving as* and approve what the team posted. The checking balance drops only after a payment is approved.
+3. Do the same for **102**, then **103**.
+
+With the same approvals as the graded run (pay #501, pay rent, approve the discount, try the restock), checking goes **$3,400 → $2,560 → $160 → $160**, and the $264 restock is refused because cash can't cover it.
+
+Each ticket run makes real `gpt-6-luna` calls (about 30k–65k tokens per ticket).
+
+**Without the board:** `.venv/bin/python backend/team.py` resets the database itself, triages, and runs all three tickets in one go. Approvals then wait on the board or the API.
 
 ## Tests (offline: no model calls, temp database)
 

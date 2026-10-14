@@ -288,6 +288,8 @@ For each problem, record the problem number and title, the prompt I gave, a foll
 - **Follow-up prompts:**
   - "Let's push our code to public Github repository so that the graders can clone it"
   - "let's also add this in output/github_url.txt"
+  - "just making sure that this is the case?" (requirement: don't push the real `.env`; include both databases in `data/`) → checked on GitHub. The real key is in no commit, and both `data/campus_customs.db` and `data/campus_customs_new.db` are there.
+  - README requirement: "copy original DB to the working copy when you need a clean run, start MCP server, start FastAPI backend, start the React board, reset the DB before a full three-ticket run" → the README "How to run" section is now 0) setup, 1) `cp data/campus_customs.db data/campus_customs_new.db`, 2) start the MCP server (started by the backend over stdio; `team.py --check` to confirm, or run it raw; Claude Code via `.mcp.json`), 3) `uvicorn main:app --reload --port 8000`, 4) `npm run dev`, 5) reset (Reset data button, `POST /api/reset`, or the `cp`) and then run 101 → 102 → 103 with approvals, expecting $3,400 → $2,560 → $160 → $160. Steps 1–3 were checked on a fresh clone in a scratch folder.
 - **Result / evidence:**
   - **Reorganized to the tree:**
     - `mcp.json` became **`.mcp.json`** with paths relative to `hw5/`. The backend and smoke test resolve them, so the repo works wherever it's cloned.
